@@ -6,8 +6,7 @@ INIT32:		      equ 0x006F			; Inicializa VDP em modo texto 32x24
 CHGET:		      equ 0x009F			; Obtém caractere do buffer do teclado
 CHPUT:		      equ 0x00A2			; Escreve caractere na tela
 
-            org romArea
-
+org romArea
             db "AB"                     ; ID
             dw startProgram             ; INIT
             dw 0x0000                   ; STATEMENT
@@ -19,9 +18,24 @@ startProgram:
             call INIT32
             call printPositions
 
-loop:
-            jp loop
+loopUntilSpace:
+            call CHGET
+            cp 97             ;esquerda
+            jp z, moveLeft
+            cp 32             ;espaco
+            jp z, EndProgram
+            call printPositions
+            jr loopUntilSpace
 
+moveLeft:                       ; diminuir em um pos x
+            push af
+              ld a, (posX)
+              cp 1
+              ret z
+              dec a
+              ld (posX), a
+            pop af
+            ret
 
 printPositions:
             ld hl,posX
@@ -45,9 +59,10 @@ newLine:
             call CHPUT
             ret
 
-posX:           db "128",255
-posY:           db "96",255
+posX:       db "128",255
+posY:       db "96",255
 
+EndProgram:
 romPad:
             ds romSize-(romPad-romArea),0
             end
