@@ -1,5 +1,5 @@
 ; -===========================-
-;  copiar um bloco para a VRAM
+;  Teste mover sprite
 ;  Manoel Neto
 ; -===========================-
 romSize:    equ 8192
@@ -30,8 +30,6 @@ CHGMOD:		  equ 0x005F			; Altera modo do VDP
             ds 6,0                      ; RESERVED
 
 startProgram:
-            proc
-
             ld a,15                     ;
             ld (FORCLR),a               ; cor da frente em branco
             ld a,5                      ;
@@ -59,7 +57,12 @@ startProgram:
             ld de,14336
             ld hl,sprite
             call LDIRVM
+            ld a, 64
+            ld (ramArea), a
+            ld a, 96
+            ld (ramArea+1), a
 
+loop:
             ; Preencher a Tabela de Atributos dos sprites
             ; putsprite
             ;-===========================================-
@@ -70,8 +73,8 @@ startProgram:
             ; E  — o padrão do sprite.
             ;-===========================================-
             ld b,3
-            ld hl,127
-            ld a,180
+            ld hl,(ramArea)
+            ld a,(ramArea+1)
             ld d,11
             ld e,0
             call putSprite
@@ -86,17 +89,58 @@ startProgram:
             ; E  — o padrão do sprite.
             ;-===========================================-
             ld b,3
-            ld hl,127
-            ld a,180
+            ld hl,(ramArea)
+            ld a,(ramArea+1)
             ld d,1
             ld e,1
             call putSprite
 
-loop:
-            jr loop
+            call CHGET
+            cp 97             ;esquerda
+            call z, moveLeft
+            cp 100            ;direita
+            call z, moveRight
+            cp 119            ;cima
+            call z, moveUp
+            cp 115            ;baixo
+            call z, moveDown
+            cp 32             ;espaco
+            jp z, EndProgram
+jr loop
             endp
-
             include "library/putSprite.asm"
+
+moveLeft:                       ; diminuir em um pos x
+            ld a,(ramArea)
+            cp 1
+            ret z
+            dec a
+            ld (ramArea), a
+ret
+
+moveRight:                       ; aumentar em um pos x
+            ld a,(ramArea)
+            cp 255
+            ret z
+            inc a
+            ld (ramArea), a
+ret
+
+moveUp:                        ; aumentar em um pos y
+            ld a,(ramArea+1)
+            cp 198
+            ret z
+            inc a
+            ld (ramArea+1), a
+ret
+
+moveDown:                       ; diminuir em um pos y
+            ld a,(ramArea+1)
+            cp 1
+            ret z
+            dec a
+            ld (ramArea+1), a
+ret
 
 SetScreen2:
             LD HL,0x0101
@@ -108,7 +152,7 @@ SetScreen2:
           	LD B,A
           	LD C,1
             call WRTVDP
-            ret
+ret
 
 sprite:
             ; Nave - Cada Bloco tem 32 bytes
@@ -411,6 +455,8 @@ sprite:
             DB 00000000b
             DB 00000000b
             DB 00000000b
+
+EndProgram:
 romPad:
             ds romSize-(romPad-romArea),0
             end

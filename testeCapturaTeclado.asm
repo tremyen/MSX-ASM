@@ -34,9 +34,9 @@ loopUntilSpace:
             call z, moveUp
             cp 115            ;baixo
             call z, moveDown
-
             cp 32             ;espaco
             jp z, EndProgram
+
             call printPositions
             jr loopUntilSpace
 
